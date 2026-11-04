@@ -193,7 +193,7 @@ Una vez recibidos y validados, procederemos a la creación de su cuenta y le not
 Saludos cordiales,
 [TU NOMBRE] | Autoplanet"""
     return {
-        "asunto": f"Solicitud de Antecedentes — {razón}",
+        "asunto": f"Solicitud de Antecedentes — {razon}",
         "para": mail,
         "cuerpo": cuerpo
     }
@@ -207,7 +207,7 @@ st.markdown("## 📋 Leads Clientes Nuevos — Autoplanet")
 tab_panel, tab_nuevo = st.tabs(["📊 Panel de seguimiento", "📷 Nuevo lead desde foto"])
 
 # ── TAB 1: Panel ──────────────────────────────────────────────
-_with tab_panel:
+with tab_panel:
     leads = load_leads()
 
     # Stats
@@ -224,7 +224,7 @@ _with tab_panel:
 
     # Filtros + export
     col_b, col_f, col_exp = st.columns([3, 2, 1])
-    buscar = col_b.text_input("🔒 Buscar", placeholder="Nombre, RUT, razón social…", label_visibility="collapsed")
+    buscar = col_b.text_input("🔍 Buscar", placeholder="Nombre, RUT, razón social…", label_visibility="collapsed")
     filtro_e = col_f.selectbox("Estado", ["Todos"] + ESTADOS, label_visibility="collapsed")
     excel_bytes = generar_excel(leads)
     col_exp.download_button("⬇ Excel", data=excel_bytes,
@@ -260,7 +260,7 @@ _with tab_panel:
                 with col3:
                     mail = lead.get("mail","")
                     if mail:
-                        st.markdown(f"📧 [{mail}](mailto:{iail})")
+                        st.markdown(f"📧 [{mail}](mailto:{mail})")
                     st.caption(lead.get("giro",""))
                 with col4:
                     ba, bb, bc, bd, be = st.columns(5)
@@ -268,7 +268,7 @@ _with tab_panel:
                         retroceder_estado(lead)
                         st.rerun()
 
-                    if bb.button(""▶", key=f"av_{lead['id']}", use_container_width=True, help="Avanzar estado"):
+                    if bb.button("▶", key=f"av_{lead['id']}", use_container_width=True, help="Avanzar estado"):
                         avanzar_estado(lead)
                         st.rerun()
 
@@ -280,7 +280,7 @@ _with tab_panel:
 
                     rut = lead.get("rut_cliente") or lead.get("rut_empresa") or ""
                     sii_url = f"https://www2.sii.cl/stc/noauthz"
-                    bd.link_button('🔎", sii_url, use_container_width=True, help=f"Consultar SII (RUT: {rut})")
+                    bd.link_button("🔎", sii_url, use_container_width=True, help=f"Consultar SII (RUT: {rut})")
 
                     if be.button("🗑", key=f"del_{lead['id']}", use_container_width=True, help="Eliminar"):
                         delete_lead(lead["id"])
