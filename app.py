@@ -9,24 +9,24 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-# ââ Config ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ── Config ────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Leads Clientes Nuevos",
-    page_icon="ð",
+    page_icon="📋",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-ESTADOS = ["Pendiente contacto", "Correo enviado", "Antecedentes recibidos", "Pendiente de creaciÃ³n", "Cliente creado"]
+ESTADOS = ["Pendiente contacto", "Correo enviado", "Antecedentes recibidos", "Pendiente de creación", "Cliente creado"]
 ESTADO_COLOR = {
-    "Pendiente contacto": "ð ",
-    "Correo enviado": "ðµ",
-    "Antecedentes recibidos": "ð£",
-    "Pendiente de creaciÃ³n": "ð¡",
-    "Cliente creado": "ð¢",
+    "Pendiente contacto": "🟠",
+    "Correo enviado": "🔵",
+    "Antecedentes recibidos": "🟣",
+    "Pendiente de creación": "🟡",
+    "Cliente creado": "🟢",
 }
 
-# ââ CSS âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ── CSS ───────────────────────────────────────────────────────
 st.markdown("""
 <style>
   .main .block-container { padding-top: 1.5rem; max-width: 1200px; }
@@ -40,7 +40,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ââ Clientes ââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ── Clientes ──────────────────────────────────────────────────
 @st.cache_resource
 def get_supabase() -> Client:
     url = st.secrets["SUPABASE_URL"]
@@ -50,7 +50,7 @@ def get_supabase() -> Client:
 def get_anthropic():
     return anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 
-# ââ DB helpers ââââââââââââââââââââââââââââââââââââââââââââââââ
+# ── DB helpers ────────────────────────────────────────────────
 def load_leads():
     sb = get_supabase()
     res = sb.table("leads").select("*").order("id", desc=True).execute()
@@ -101,11 +101,11 @@ def retroceder_estado(lead: dict):
         updates[fecha_map[lead["estado"]]] = None
     update_lead(lead["id"], updates)
 
-# ââ ExtracciÃ³n IA âââââââââââââââââââââââââââââââââââââââââââââ
+# ── Extracción IA ─────────────────────────────────────────────
 def extraer_datos_imagen(img_bytes: bytes, media_type: str) -> dict:
     b64 = base64.standard_b64encode(img_bytes).decode()
     client = get_anthropic()
-    prompt = """Extrae los datos del formulario de contacto en esta imagen y devuÃ©lvelos como JSON con estas claves exactas (usa null si no aparece el campo):
+    prompt = """Extrae los datos del formulario de contacto en esta imagen y devuélvelos como JSON con estas claves exactas (usa null si no aparece el campo):
 {
   "nombre": "",
   "rut_cliente": "",
@@ -138,13 +138,13 @@ Responde SOLO con el JSON, sin texto adicional."""
             texto = texto[:texto.index("```")]
     return json.loads(texto)
 
-# ââ Export Excel ââââââââââââââââââââââââââââââââââââââââââââââ
+# ── Export Excel ──────────────────────────────────────────────
 def generar_excel(leads: list) -> bytes:
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Leads"
-    headers = ["ID","Fecha","Nombre","RUT Cliente","RUT Empresa","RazÃ³n Social","Giro",
-               "RegiÃ³n","Comuna","DirecciÃ³n","TelÃ©fono","Mail","Motivo","Estado",
+    headers = ["ID","Fecha","Nombre","RUT Cliente","RUT Empresa","Razón Social","Giro",
+               "Región","Comuna","Dirección","Teléfono","Mail","Motivo","Estado",
                "Correo Enviado","Antecedentes","Cliente Creado","Observaciones"]
     keys = ["id","fecha","nombre","rut_cliente","rut_empresa","razon_social","giro",
             "region","comuna","direccion","telefono","mail","motivo","estado",
@@ -172,62 +172,62 @@ def generar_excel(leads: list) -> bytes:
     wb.save(buf)
     return buf.getvalue()
 
-# ââ Correo ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ── Correo ────────────────────────────────────────────────────
 def generar_correo(lead: dict) -> dict:
     nombre = lead.get("nombre", "")
     razon = lead.get("razon_social") or nombre
     mail = lead.get("mail", "")
     cuerpo = f"""Estimado/a {nombre},
 
-Junto con saludarle, acusamos recibo de su solicitud de registro como cliente. Para continuar con el proceso de activaciÃ³n de su cuenta, necesitamos que nos haga llegar los siguientes antecedentes:
+Junto con saludarle, acusamos recibo de su solicitud de registro como cliente. Para continuar con el proceso de activación de su cuenta, necesitamos que nos haga llegar los siguientes antecedentes:
 
-1. CÃ©dula de identidad del representante legal (ambos lados)
-2. IniciaciÃ³n de actividades emitida por el SII
-3. Carpeta tributaria electrÃ³nica del SII (sii.cl â Mi SII â Carpeta Tributaria)
-4. Datos bancarios: banco, tipo de cuenta, NÂ° de cuenta, RUT titular y correo para confirmaciÃ³n de transferencia
+1. Cédula de identidad del representante legal (ambos lados)
+2. Iniciación de actividades emitida por el SII
+3. Carpeta tributaria electrónica del SII (sii.cl → Mi SII → Carpeta Tributaria)
+4. Datos bancarios: banco, tipo de cuenta, N° de cuenta, RUT titular y correo para confirmación de transferencia
 
-Por favor, envÃ­e los documentos respondiendo este correo.
+Por favor, envíe los documentos respondiendo este correo.
 
-Una vez recibidos y validados, procederemos a la creaciÃ³n de su cuenta y le notificaremos a la brevedad.
+Una vez recibidos y validados, procederemos a la creación de su cuenta y le notificaremos a la brevedad.
 
 Saludos cordiales,
 [TU NOMBRE] | Autoplanet"""
     return {
-        "asunto": f"Solicitud de Antecedentes â {razon}",
+        "asunto": f"Solicitud de Antecedentes — {razón}",
         "para": mail,
         "cuerpo": cuerpo
     }
 
-# ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ══════════════════════════════════════════════════════════════
 #  UI
-# ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+# ══════════════════════════════════════════════════════════════
 
-st.markdown("## ð Leads Clientes Nuevos â Autoplanet")
+st.markdown("## 📋 Leads Clientes Nuevos — Autoplanet")
 
-tab_panel, tab_nuevo = st.tabs(["ð Panel de seguimiento", "ð· Nuevo lead desde foto"])
+tab_panel, tab_nuevo = st.tabs(["📊 Panel de seguimiento", "📷 Nuevo lead desde foto"])
 
-# ââ TAB 1: Panel ââââââââââââââââââââââââââââââââââââââââââââââ
-with tab_panel:
+# ── TAB 1: Panel ──────────────────────────────────────────────
+_with tab_panel:
     leads = load_leads()
 
     # Stats
     cnt = {e: sum(1 for l in leads if l.get("estado") == e) for e in ESTADOS}
     c0, c1, c2, c3, c4, c5 = st.columns(6)
     c0.metric("Total Leads", len(leads))
-    c1.metric("ð  Pendiente contacto", cnt["Pendiente contacto"])
-    c2.metric("ðµ Correo enviado", cnt["Correo enviado"])
-    c3.metric("ð£ Antecedentes recibidos", cnt["Antecedentes recibidos"])
-    c4.metric("ð¡ Pendiente de creaciÃ³n", cnt["Pendiente de creaciÃ³n"])
-    c5.metric("ð¢ Cliente creado", cnt["Cliente creado"])
+    c1.metric("🟠 Pendiente contacto", cnt["Pendiente contacto"])
+    c2.metric("🔵 Correo enviado", cnt["Correo enviado"])
+    c3.metric("🟣 Antecedentes recibidos", cnt["Antecedentes recibidos"])
+    c4.metric("🟡 Pendiente de creación", cnt["Pendiente de creación"])
+    c5.metric("🟢 Cliente creado", cnt["Cliente creado"])
 
     st.divider()
 
     # Filtros + export
     col_b, col_f, col_exp = st.columns([3, 2, 1])
-    buscar = col_b.text_input("ð Buscar", placeholder="Nombre, RUT, razÃ³n socialâ¦", label_visibility="collapsed")
+    buscar = col_b.text_input("🔒 Buscar", placeholder="Nombre, RUT, razón social…", label_visibility="collapsed")
     filtro_e = col_f.selectbox("Estado", ["Todos"] + ESTADOS, label_visibility="collapsed")
     excel_bytes = generar_excel(leads)
-    col_exp.download_button("â¬ Excel", data=excel_bytes,
+    col_exp.download_button("⬇ Excel", data=excel_bytes,
                             file_name=f"leads_{date.today()}.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             use_container_width=True)
@@ -260,35 +260,35 @@ with tab_panel:
                 with col3:
                     mail = lead.get("mail","")
                     if mail:
-                        st.markdown(f"ð§ [{mail}](mailto:{mail})")
+                        st.markdown(f"📧 [{mail}](mailto:{iail})")
                     st.caption(lead.get("giro",""))
                 with col4:
                     ba, bb, bc, bd, be = st.columns(5)
-                    if ba.button("â", key=f"ret_{lead['id']}", use_container_width=True, help="Retroceder estado"):
+                    if ba.button("◀", key=f"ret_{lead['id']}", use_container_width=True, help="Retroceder estado"):
                         retroceder_estado(lead)
                         st.rerun()
 
-                    if bb.button("â¶", key=f"av_{lead['id']}", use_container_width=True, help="Avanzar estado"):
+                    if bb.button(""▶", key=f"av_{lead['id']}", use_container_width=True, help="Avanzar estado"):
                         avanzar_estado(lead)
                         st.rerun()
 
                     correo_data = generar_correo(lead)
-                    if bc.button("ð§", key=f"co_{lead['id']}", use_container_width=True, help="Generar correo"):
+                    if bc.button("📧", key=f"co_{lead['id']}", use_container_width=True, help="Generar correo"):
                         st.session_state[f"show_correo_{lead['id']}"] = True
                         if lead.get("estado") == "Pendiente contacto":
                             avanzar_estado(lead)
 
                     rut = lead.get("rut_cliente") or lead.get("rut_empresa") or ""
                     sii_url = f"https://www2.sii.cl/stc/noauthz"
-                    bd.link_button("ð", sii_url, use_container_width=True, help=f"Consultar SII (RUT: {rut})")
+                    bd.link_button('🔎", sii_url, use_container_width=True, help=f"Consultar SII (RUT: {rut})")
 
-                    if be.button("ð", key=f"del_{lead['id']}", use_container_width=True, help="Eliminar"):
+                    if be.button("🗑", key=f"del_{lead['id']}", use_container_width=True, help="Eliminar"):
                         delete_lead(lead["id"])
                         st.rerun()
 
                     # Modal correo
                     if st.session_state.get(f"show_correo_{lead['id']}"):
-                        with st.expander("ð§ Correo generado", expanded=True):
+                        with st.expander("📧 Correo generado", expanded=True):
                             st.text_input("Para:", value=correo_data["para"], key=f"cp_{lead['id']}")
                             st.text_input("Asunto:", value=correo_data["asunto"], key=f"ca_{lead['id']}")
                             cuerpo_txt = st.text_area("Cuerpo:", value=correo_data["cuerpo"],
@@ -298,14 +298,14 @@ with tab_panel:
                                 st.session_state[f"show_correo_{lead['id']}"] = False
                                 st.rerun()
 
-# ââ TAB 2: Nuevo lead âââââââââââââââââââââââââââââââââââââââââ
+# ── TAB 2: Nuevo lead ─────────────────────────────────────────
 with tab_nuevo:
     st.markdown("### Subir foto del formulario")
 
     uploaded = st.file_uploader(
         "Arrastra o selecciona la captura del formulario",
         type=["jpg", "jpeg", "png", "webp"],
-        help="La IA extrae los datos automÃ¡ticamente"
+        help="La IA extrae los datos automáticamente"
     )
 
     if uploaded:
@@ -317,13 +317,13 @@ with tab_nuevo:
             # Extraer datos si es una imagen nueva
             key_img = f"extracted_{uploaded.name}_{uploaded.size}"
             if key_img not in st.session_state:
-                with st.spinner("Extrayendo datos con IAâ¦"):
+                with st.spinner("Extrayendo datos con IA…"):
                     try:
                         img_bytes = uploaded.read()
                         mt = uploaded.type or "image/jpeg"
                         datos = extraer_datos_imagen(img_bytes, mt)
                         st.session_state[key_img] = datos
-                        st.success("Datos extraÃ­dos correctamente")
+                        st.success("Datos extraídos correctamente")
                     except Exception as e:
                         st.error(f"Error al procesar la imagen: {e}")
                         st.session_state[key_img] = {}
@@ -333,24 +333,24 @@ with tab_nuevo:
             st.markdown("#### Revisa y corrige los datos")
             with st.form("form_lead"):
                 c1, c2 = st.columns(2)
-                fecha = c1.date_input("Fecha recepciÃ³n", value=date.today())
+                fecha = c1.date_input("Fecha recepción", value=date.today())
                 motivo = c2.text_input("Motivo contacto", value=datos.get("motivo") or "")
                 nombre = st.text_input("Nombre completo *", value=datos.get("nombre") or "")
                 c3, c4 = st.columns(2)
                 rut_cli = c3.text_input("RUT Cliente", value=datos.get("rut_cliente") or "")
                 rut_emp = c4.text_input("RUT Empresa", value=datos.get("rut_empresa") or "")
-                razon = st.text_input("RazÃ³n Social", value=datos.get("razon_social") or "")
+                razon = st.text_input("Razón Social", value=datos.get("razon_social") or "")
                 c5, c6 = st.columns(2)
                 giro = c5.text_input("Giro", value=datos.get("giro") or "")
-                region = c6.text_input("RegiÃ³n", value=datos.get("region") or "")
+                region = c6.text_input("Región", value=datos.get("region") or "")
                 c7, c8 = st.columns(2)
                 comuna = c7.text_input("Comuna", value=datos.get("comuna") or "")
-                telefono = c8.text_input("TelÃ©fono", value=datos.get("telefono") or "")
-                direccion = st.text_input("DirecciÃ³n", value=datos.get("direccion") or "")
+                telefono = c8.text_input("Teléfono", value=datos.get("telefono") or "")
+                direccion = st.text_input("Dirección", value=datos.get("direccion") or "")
                 mail = st.text_input("Mail", value=datos.get("mail") or "")
                 obs = st.text_area("Observaciones", height=80)
 
-                submitted = st.form_submit_button("ð¾ Guardar lead", use_container_width=True, type="primary")
+                submitted = st.form_submit_button("💾 Guardar lead", use_container_width=True, type="primary")
                 if submitted:
                     if not nombre.strip():
                         st.error("El nombre es requerido")
@@ -371,15 +371,15 @@ with tab_nuevo:
                             "observaciones": obs.strip(),
                         })
                         del st.session_state[key_img]
-                        st.success("â Lead guardado correctamente")
+                        st.success("✅ Lead guardado correctamente")
                         st.balloons()
     else:
         st.markdown("""
         <div style="border:2px dashed #CBD5E0;border-radius:10px;padding:60px;text-align:center;background:white">
-            <div style="font-size:48px">ð·</div>
+            <div style="font-size:48px">📷</div>
             <p style="color:#718096;margin-top:12px;font-size:15px">
                 Sube una captura del formulario de contacto<br>
-                <strong>y la IA extraerÃ¡ los datos automÃ¡ticamente</strong>
+                <strong>y la IA extraerá los datos automáticamente</strong>
             </p>
         </div>
         """, unsafe_allow_html=True)
