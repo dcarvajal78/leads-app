@@ -91,6 +91,7 @@ def retroceder_estado(lead: dict):
         return
     prev = ESTADOS[idx - 1]
     updates = {"estado": prev}
+    # Limpiar fecha del estado que se abandona
     fecha_map = {
         "Correo enviado": "fecha_correo",
         "Antecedentes recibidos": "fecha_antecedentes",
@@ -100,7 +101,7 @@ def retroceder_estado(lead: dict):
         updates[fecha_map[lead["estado"]]] = None
     update_lead(lead["id"], updates)
 
-# ââ ExtracciÃ³n IA ââââââââââââââââââââââââââââââââââââââââââââââ
+# ââ ExtracciÃ³n IA âââââââââââââââââââââââââââââââââââââââââââââ
 def extraer_datos_imagen(img_bytes: bytes, media_type: str) -> dict:
     b64 = base64.standard_b64encode(img_bytes).decode()
     client = get_anthropic()
@@ -137,7 +138,7 @@ Responde SOLO con el JSON, sin texto adicional."""
             texto = texto[:texto.index("```")]
     return json.loads(texto)
 
-# ââ Export Excel âââââââââââââââââââââââââââââââââââââââââââââ
+# ââ Export Excel ââââââââââââââââââââââââââââââââââââââââââââââ
 def generar_excel(leads: list) -> bytes:
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -223,10 +224,10 @@ with tab_panel:
 
     # Filtros + export
     col_b, col_f, col_exp = st.columns([3, 2, 1])
-    buscar = col_b.text_input("ð Buscar", placeholder="Nombre, RUT, razÃ³n socialâ¦", label_visibility="collapsed")
+    buscar = col_b.text_input("ð Buscar", placeholder="Nombre, RUT, razÃ³n socialâ¦", label_visibility="collapsed")
     filtro_e = col_f.selectbox("Estado", ["Todos"] + ESTADOS, label_visibility="collapsed")
     excel_bytes = generar_excel(leads)
-    col_exp.download_button("{¬ Excel", data=excel_bytes,
+    col_exp.download_button("â¬ Excel", data=excel_bytes,
                             file_name=f"leads_{date.today()}.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             use_container_width=True)
@@ -272,13 +273,84 @@ with tab_panel:
                         st.rerun()
 
                     correo_data = generar_correo(lead)
-                    if bc.button("{Â~N°­äõ½}í±l¥uô°ÕÍ}½¹Ñ¥¹É}Ý¥Ñ õQÉÕ°¡±Àô¹ÉÈ½ÉÉ¼¤è(ÍÐ¹ÍÍÍ¥½¹}ÍÑÑmÍ¡½Ý}½ÉÉ½}í±l¥uôtôQÉÕ(¥±¹Ð ÍÑ¼¤ôôA¹¥¹Ñ½¹ÑÑ¼è(Ù¹éÉ}ÍÑ¼¡±¤((ÉÕÐô±¹Ð ÉÕÑ}±¥¹Ñ¤½È±¹Ð ÉÕÑ}µÁÉÍ¤½È(Í¥¥}ÕÉ°ô¡ÑÑÁÌè¼½ÝÝÜÈ¹Í¥¤¹°½ÍÑ½¹½ÕÑ¡è(¹±¥¹­}ÕÑÑ½¸ Â~R8°Í¥¥}ÕÉ°°ÕÍ}½¹Ñ¥¹É}Ý¥Ñ õQÉÕ°¡±Àõ
-½¹ÍÕ±ÑÈM%$¡IUPèíÉÕÑô¤¤((¥¹ÕÑÑ½¸ {Â~^D°­äõ±}í±l¥uô°ÕÍ}½¹Ñ¥¹É}Ý¥Ñ õQÉÕ°¡±Àô±¥µ¥¹È¤è(±Ñ}±¡±l¥t¤(ÍÐ¹ÉÉÕ¸ ¤((5½°½ÉÉ¼(¥ÍÐ¹ÍÍÍ¥½¹}ÍÑÑ¹Ð¡Í¡½Ý}½ÉÉ½}í±l¥uô¤è(Ý¥Ñ ÍÐ¹áÁ¹È Â~N
-½ÉÉ¼¹É¼°áÁ¹õQÉÕ¤è(ÍÐ¹ÑáÑ}¥¹ÁÕÐ AÉè°Ù±Õõ½ÉÉ½}ÑlÁÉt°­äõÁ}í±l¥uô¤(ÍÐ¹ÑáÑ}¥¹ÁÕÐ ÍÕ¹Ñ¼è°Ù±Õõ½ÉÉ½}ÑlÍÕ¹Ñ¼t°­äõ}í±l¥uô¤(ÕÉÁ½}ÑáÐôÍÐ¹ÑáÑ}É 
-ÕÉÁ¼è°Ù±Õõ½ÉÉ½}ÑlÕÉÁ¼t°(¡¥¡ÐôÈÀÀ°­äõ}í±l¥uô¤(ÍÐ¹½¡ÕÉÁ½}ÑáÐ°±¹Õõ9½¹¤(¥ÍÐ¹ÕÑÑ½¸ 
-ÉÉÈ°­äõ}í±l¥uô¤è(ÍÐ¹ÍÍÍ¥½¹}ÍÑÑmÍ¡½Ý}½ÉÉ½}í±l¥uôtô±Í(ÍÐ¹ÉÉÕ¸ ¤((RR QÈè9ÕÙ¼±RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR )Ý¥Ñ Ñ}¹ÕÙ¼è(ÍÐ¹µÉ­½Ý¸ MÕ¥È½Ñ¼°½ÉµÕ±É¥¼¤((ÕÁ±½ôÍÐ¹¥±}ÕÁ±½È (ÉÉÍÑÉ¼Í±¥½¹±ÁÑÕÉ°½ÉµÕ±É¥¼°(ÑåÁõl©Á°©Á°Á¹°ÝÀt°(¡±Àô1%áÑÉ±½ÌÑ½ÌÕÑ½·Ñ¥µ¹Ñ(¤((¥ÕÁ±½è(½±}¥µ°½±}½É´ôÍÐ¹½±Õµ¹Ì¡lÄ°Åt¤(Ý¥Ñ ½±}¥µè(ÍÐ¹¥µ¡ÕÁ±½°ÁÑ¥½¸ô½ÉµÕ±É¥¼É¥¥¼°ÕÍ}½¹Ñ¥¹É}Ý¥Ñ õQÉÕ¤((Ý¥Ñ ½±}½É´è(áÑÉÈÑ½ÌÍ¤ÌÕ¹¥µ¸¹ÕÙ(­å}¥µôáÑÉÑ}íÕÁ±½¹¹µõ}íÕÁ±½¹Í¥éô(¥­å}¥µ¹½Ð¥¸ÍÐ¹ÍÍÍ¥½¹}ÍÑÑè(Ý¥Ñ ÍÐ¹ÍÁ¥¹¹È áÑÉå¹¼Ñ½Ì½¸%¤è(ÑÉäè(¥µ}åÑÌôÕÁ±½¹É ¤(µÐôÕÁ±½¹ÑåÁ½È¥µ½©Á(Ñ½ÌôáÑÉÉ}Ñ½Í}¥µ¸¡¥µ}åÑÌ°µÐ¤(ÍÐ¹ÍÍÍ¥½¹}ÍÑÑm­å}¥µtôÑ½Ì(ÍÐ¹ÍÕÍÌ Ñ½ÌáÑÉµ½Ì½ÉÉÑµ¹Ñ¤(áÁÐáÁÑ¥½¸Ìè(ÍÐ¹ÉÉ½È¡ÉÉ½È°ÁÉ½ÍÈ±¥µ¸èíô¤(ÍÐ¹ÍÍÍ¥½¹}ÍÑÑm­å}¥µtôíô((Ñ½ÌôÍÐ¹ÍÍÍ¥½¹}ÍÑÑ¹Ð¡­å}¥µ°íô¤((ÍÐ¹µÉ­½Ý¸ IÙ¥Íä½ÉÉ¥±½ÌÑ½Ì¤(Ý¥Ñ ÍÐ¹½É´ ½Éµ}±¤è(Ä°ÈôÍÐ¹½±Õµ¹Ì È¤(¡ôÄ¹Ñ}¥¹ÁÕÐ ¡ÉÁ§Í¸°Ù±ÕõÑ¹Ñ½ä ¤¤(µ½Ñ¥Ù¼ôÈ¹ÑáÑ}¥¹ÁÕÐ 5½Ñ¥Ù¼½¹ÑÑ¼°Ù±ÕõÑ½Ì¹Ð µ½Ñ¥Ù¼¤½È¤(¹½µÉôÍÐ¹ÑáÑ}¥¹ÁÕÐ 9½µÉ½µÁ±Ñ¼¨°Ù±ÕõÑ½Ì¹Ð ¹½µÉ¤½È¤(Ì°ÐôÍÐ¹½±Õµ¹Ì È¤(ÉÕÑ}±¤ôÌ¹ÑáÑ}¥¹ÁÕÐ IUP
-±¥¹Ñ°Ù±ÕõÑ½Ì¹Ð ÉÕÑ}±¥¹Ñ¤½È¤(ÉÕÑ}µÀôÐ¹ÑáÑ}¥¹ÁÕÐ IUPµÁÉÍ°Ù±ÕõÑ½Ì¹Ð ÉÕÑ}µÁÉÍ¤½È¤(Éé½¸ôÍÐ¹ÑáÑ}¥¹ÁÕÐ IëÍ¸M½¥°°Ù±ÕõÑ½Ì¹Ð Éé½¹}Í½¥°¤½È¤(Ô°ØôÍÐ¹½±Õµ¹Ì È¤(¥É¼ôÔ¹ÑáÑ}¥¹ÁÕÐ ¥É¼°Ù±ÕõÑ½Ì¹Ð ¥É¼¤½È¤(É¥½¸ôØ¹ÑáÑ}¥¹ÁÕÐ I§Í¸°Ù±ÕõÑ½Ì¹Ð É¥½¸¤½È¤(Ü°àôÍÐ¹½±Õµ¹Ì È¤(½µÕ¹ôÜ¹ÑáÑ}¥¹ÁÕÐ 
-½µÕ¹°Ù±ÕõÑ½Ì¹Ð ½µÕ¹¤½È¤(Ñ±½¹¼ôà¹ÑáÑ}¥¹ÁÕÐ Q³¥½¹¼°Ù±ÕõÑ½Ì¹Ð Ñ±½¹¼¤½È¤(¥É¥½¸ôÍÐ¹ÑáÑ}¥¹ÁÕÐ ¥É§Í¸°Ù±ÕõÑ½Ì¹Ð ¥É¥½¸¤½È¤(µ¥°ôÍÐ¹ÑáÑ}¥¹ÁÕÐ 5¥°°Ù±ÕõÑ½Ì¹Ð µ¥°¤½È¤(½ÌôÍÐ¹ÑáÑ}É =ÍÉÙ¥½¹Ì°¡¥¡ÐôàÀ¤((ÍÕµ¥ÑÑôÍÐ¹½Éµ}ÍÕµ¥Ñ}ÕÑÑ½¸ {Â~Jû"Guardar lead", use_container_width=True, type="primary")
+                    if bc.button("ð§", key=f"co_{lead['id']}", use_container_width=True, help="Generar correo"):
+                        st.session_state[f"show_correo_{lead['id']}"] = True
+                        if lead.get("estado") == "Pendiente contacto":
+                            avanzar_estado(lead)
+
+                    rut = lead.get("rut_cliente") or lead.get("rut_empresa") or ""
+                    sii_url = f"https://www2.sii.cl/stc/noauthz"
+                    bd.link_button("ð", sii_url, use_container_width=True, help=f"Consultar SII (RUT: {rut})")
+
+                    if be.button("ð", key=f"del_{lead['id']}", use_container_width=True, help="Eliminar"):
+                        delete_lead(lead["id"])
+                        st.rerun()
+
+                    # Modal correo
+                    if st.session_state.get(f"show_correo_{lead['id']}"):
+                        with st.expander("ð§ Correo generado", expanded=True):
+                            st.text_input("Para:", value=correo_data["para"], key=f"cp_{lead['id']}")
+                            st.text_input("Asunto:", value=correo_data["asunto"], key=f"ca_{lead['id']}")
+                            cuerpo_txt = st.text_area("Cuerpo:", value=correo_data["cuerpo"],
+                                                       height=200, key=f"cb_{lead['id']}")
+                            st.code(cuerpo_txt, language=None)
+                            if st.button("Cerrar", key=f"cc_{lead['id']}"):
+                                st.session_state[f"show_correo_{lead['id']}"] = False
+                                st.rerun()
+
+# ââ TAB 2: Nuevo lead âââââââââââââââââââââââââââââââââââââââââ
+with tab_nuevo:
+    st.markdown("### Subir foto del formulario")
+
+    uploaded = st.file_uploader(
+        "Arrastra o selecciona la captura del formulario",
+        type=["jpg", "jpeg", "png", "webp"],
+        help="La IA extrae los datos automÃ¡ticamente"
+    )
+
+    if uploaded:
+        col_img, col_form = st.columns([1, 1])
+        with col_img:
+            st.image(uploaded, caption="Formulario recibido", use_container_width=True)
+
+        with col_form:
+            # Extraer datos si es una imagen nueva
+            key_img = f"extracted_{uploaded.name}_{uploaded.size}"
+            if key_img not in st.session_state:
+                with st.spinner("Extrayendo datos con IAâ¦"):
+                    try:
+                        img_bytes = uploaded.read()
+                        mt = uploaded.type or "image/jpeg"
+                        datos = extraer_datos_imagen(img_bytes, mt)
+                        st.session_state[key_img] = datos
+                        st.success("Datos extraÃ­dos correctamente")
+                    except Exception as e:
+                        st.error(f"Error al procesar la imagen: {e}")
+                        st.session_state[key_img] = {}
+
+            datos = st.session_state.get(key_img, {})
+
+            st.markdown("#### Revisa y corrige los datos")
+            with st.form("form_lead"):
+                c1, c2 = st.columns(2)
+                fecha = c1.date_input("Fecha recepciÃ³n", value=date.today())
+                motivo = c2.text_input("Motivo contacto", value=datos.get("motivo") or "")
+                nombre = st.text_input("Nombre completo *", value=datos.get("nombre") or "")
+                c3, c4 = st.columns(2)
+                rut_cli = c3.text_input("RUT Cliente", value=datos.get("rut_cliente") or "")
+                rut_emp = c4.text_input("RUT Empresa", value=datos.get("rut_empresa") or "")
+                razon = st.text_input("RazÃ³n Social", value=datos.get("razon_social") or "")
+                c5, c6 = st.columns(2)
+                giro = c5.text_input("Giro", value=datos.get("giro") or "")
+                region = c6.text_input("RegiÃ³n", value=datos.get("region") or "")
+                c7, c8 = st.columns(2)
+                comuna = c7.text_input("Comuna", value=datos.get("comuna") or "")
+                telefono = c8.text_input("TelÃ©fono", value=datos.get("telefono") or "")
+                direccion = st.text_input("DirecciÃ³n", value=datos.get("direccion") or "")
+                mail = st.text_input("Mail", value=datos.get("mail") or "")
+                obs = st.text_area("Observaciones", height=80)
+
+                submitted = st.form_submit_button("ð¾ Guardar lead", use_container_width=True, type="primary")
                 if submitted:
                     if not nombre.strip():
                         st.error("El nombre es requerido")
@@ -299,7 +371,7 @@ with tab_panel:
                             "observaciones": obs.strip(),
                         })
                         del st.session_state[key_img]
-                        st.success("ð Lead guardado correctamente")
+                        st.success("â Lead guardado correctamente")
                         st.balloons()
     else:
         st.markdown("""
